@@ -1,0 +1,26 @@
+{
+	"name": "sol",
+	"position": {
+		"x": 0,
+		"y": 0,
+		"z": 0
+	},
+	"market": {
+		"computers": {
+			"quantity": 50,
+			"price": 250
+		},
+		"fuel": {
+			"quantity": 10000000,
+			"price": 2
+		},
+		"grains": {
+			"quantity": 600,
+			"price": 10
+		},
+		"water": {
+			"quantity": 10000,
+			"price": 5
+		}
+	}
+}

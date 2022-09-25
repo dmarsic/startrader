@@ -1,0 +1,22 @@
+{
+	"name": "vega",
+	"position": {
+		"x": 80,
+		"y": 100,
+		"z": 20
+	},
+	"market": {
+		"computers": {
+			"quantity": 500,
+			"price": 45
+		},
+		"fuel": {
+			"quantity": 10000000,
+			"price": 3
+		},
+		"grains": {
+			"quantity": 3980,
+			"price": 20
+		}
+	}
+}

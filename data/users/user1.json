@@ -1,0 +1,14 @@
+{
+	"id": "",
+	"name": "user1",
+	"credits": 1000,
+	"location": "vega",
+	"inventory": {
+		"fuel": {
+			"quantity": 250
+		},
+		"grains": {
+			"quantity": 30
+		}
+	}
+}

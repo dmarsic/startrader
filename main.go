@@ -21,6 +21,7 @@ func main() {
 	r.HandleFunc("/systems", AllSystemsHandler)
 	r.HandleFunc("/systems/{name}", SystemGetHandler)
 	r.HandleFunc("/u", AllUsersHandler)
+	r.HandleFunc("/u/new", user.NewUserPostHandler).Methods(http.MethodPost)
 	r.HandleFunc("/u/{name}", UserGetHandler)
 	r.HandleFunc("/m", user.MovePostHandler).Methods(http.MethodPost)
 	r.HandleFunc("/b", user.BuyPostHandler).Methods(http.MethodPost)

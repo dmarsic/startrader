@@ -3,12 +3,16 @@ package user
 import (
 	"encoding/json"
 	"math"
+	"net/http"
+	"startrader/internal/response"
 	"startrader/internal/starsystem"
 
 	"github.com/abhinav-TB/dantdb"
 )
 
 const StoreDir = "./data/"
+const StartingCredits = 1000.0
+const StartingSystem = "sol"
 
 type UserList struct {
 	Users map[string]User
@@ -17,7 +21,6 @@ type UserList struct {
 type Users map[string]User
 
 type User struct {
-	Id        string    `json:"id"`
 	Name      string    `json:"name"`
 	Credits   float64   `json:"credits"`
 	Location  string    `json:"location"`
@@ -28,6 +31,52 @@ type Inventory map[string]Item
 
 type Item struct {
 	Quantity float64 `json:"quantity"`
+}
+
+func NewUser(name string) *User {
+	return &User{
+		Name:      name,
+		Credits:   StartingCredits,
+		Location:  StartingSystem,
+		Inventory: nil,
+	}
+}
+
+func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
+	name := r.FormValue("name")
+
+	// If user exists, return error.
+	_, err := ReadUser(name)
+	if err == nil {
+		// User exists.
+		response.WriteResponse(w, response.Response{
+			Status:  response.Error,
+			Message: "User exists",
+			Data: map[string]any{
+				"name": name,
+			},
+		})
+		return
+	}
+
+	// Create new user.
+	u := NewUser(name)
+	err = WriteUserState(u)
+	if err != nil {
+		response.WriteResponse(w, response.Response{
+			Status:  response.Error,
+			Message: "Failed to save state",
+			Data:    map[string]any{},
+		})
+		return
+	}
+	response.WriteResponse(w, response.Response{
+		Status:  response.Ok,
+		Message: "Created",
+		Data: map[string]any{
+			"name": name,
+		},
+	})
 }
 
 func (u User) FuelRequired(destination *starsystem.System) (float64, error) {

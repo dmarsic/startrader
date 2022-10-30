@@ -19,16 +19,22 @@ Run the game to start the server.
 go run main.go
 ```
 
+Create new user.
+
+```bash
+curl -X POST --data "name=username" http://localhost:5000/u/new
+```
+
 Login to store the user id as a session variable into `cookie.txt`.
 
 ```bash
-curl -c cookie.txt http://localhost:5000/login?user=user1
+curl -c cookie.txt http://localhost:5000/login?user=username
 ```
 
 Show my information. We need to reference the cookie file.
 
 ```bash
-curl -b cookie.txt http://localhost:5000/u/user1
+curl -b cookie.txt http://localhost:5000/u/username
 ```
 
 Note that the root location redirects to showing our user's information.

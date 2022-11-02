@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"log"
 	"math"
 	"net/http"
 	"startrader/internal/response"
@@ -44,6 +45,7 @@ func NewUser(name string) *User {
 
 func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
+	log.Println("user.NewUserPostHandler: name=" + name)
 
 	// If user exists, return error.
 	_, err := ReadUser(name)
@@ -77,6 +79,8 @@ func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
 			"name": name,
 		},
 	})
+
+	log.Println("user.NewUserPostHandler: created new user: " + name)
 }
 
 func (u User) FuelRequired(destination *starsystem.System) (float64, error) {

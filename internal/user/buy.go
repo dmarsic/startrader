@@ -19,7 +19,7 @@ func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 		response.WriteResponse(w, response.Response{
 			Status:  response.Error,
 			Message: err.Error(),
-		})
+		}, http.StatusInternalServerError)
 		return
 	}
 
@@ -32,7 +32,7 @@ func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 			Data: map[string]any{
 				"input_value": r.FormValue("quantity"),
 			},
-		})
+		}, http.StatusBadRequest)
 		return
 	}
 
@@ -44,7 +44,7 @@ func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 			Data: map[string]any{
 				"item": item,
 			},
-		})
+		}, http.StatusOK)
 		return
 	}
 
@@ -57,7 +57,7 @@ func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 				"requested_quantity": fmt.Sprintf("%.1f", quantity),
 				"available_quantity": fmt.Sprintf("%.1f", marketItem.Quantity),
 			},
-		})
+		}, http.StatusOK)
 		return
 	}
 
@@ -70,7 +70,7 @@ func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 				"required_credits":  fmt.Sprintf("%.1f", requiredCredits),
 				"available_credits": fmt.Sprintf("%.1f", u.Credits),
 			},
-		})
+		}, http.StatusOK)
 		return
 	}
 
@@ -82,7 +82,7 @@ func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 		response.WriteResponse(w, response.Response{
 			Status:  response.Error,
 			Message: err.Error(),
-		})
+		}, http.StatusInternalServerError)
 		return
 	}
 
@@ -90,7 +90,7 @@ func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 		response.WriteResponse(w, response.Response{
 			Status:  response.Error,
 			Message: err.Error(),
-		})
+		}, http.StatusInternalServerError)
 		return
 	}
 
@@ -101,5 +101,5 @@ func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 			"item":     item,
 			"quantity": fmt.Sprintf("%.1f", quantity),
 		},
-	})
+	}, http.StatusCreated)
 }

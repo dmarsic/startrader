@@ -47,7 +47,7 @@ func AllSystemsHandler(w http.ResponseWriter, r *http.Request) {
 	response.WriteResponse(w, response.Response{
 		Status: response.Ok,
 		Data:   systems,
-	})
+	}, http.StatusOK)
 }
 
 func SystemGetHandler(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +56,7 @@ func SystemGetHandler(w http.ResponseWriter, r *http.Request) {
 	response.WriteResponse(w, response.Response{
 		Status: response.Ok,
 		Data:   s,
-	})
+	}, http.StatusOK)
 }
 
 func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +65,7 @@ func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	response.WriteResponse(w, response.Response{
 		Status: response.Ok,
 		Data:   users,
-	})
+	}, http.StatusOK)
 }
 
 func UserGetHandler(w http.ResponseWriter, r *http.Request) {
@@ -75,5 +75,5 @@ func UserGetHandler(w http.ResponseWriter, r *http.Request) {
 	response.WriteResponse(w, response.Response{
 		Status: response.Ok,
 		Data:   u,
-	})
+	}, http.StatusOK)
 }

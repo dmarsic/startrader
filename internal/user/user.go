@@ -57,7 +57,7 @@ func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
 			Data: map[string]any{
 				"name": name,
 			},
-		})
+		}, http.StatusOK)
 		return
 	}
 
@@ -69,7 +69,7 @@ func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
 			Status:  response.Error,
 			Message: "Failed to save state",
 			Data:    map[string]any{},
-		})
+		}, http.StatusInternalServerError)
 		return
 	}
 	response.WriteResponse(w, response.Response{
@@ -78,7 +78,7 @@ func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
 		Data: map[string]any{
 			"name": name,
 		},
-	})
+	}, http.StatusCreated)
 
 	log.Println("user.NewUserPostHandler: created new user: " + name)
 }

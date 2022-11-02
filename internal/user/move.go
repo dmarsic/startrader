@@ -29,7 +29,7 @@ func MovePostHandler(w http.ResponseWriter, r *http.Request) {
 				"available_fuel": fuelAvailable,
 				"destination":    destination.Name,
 			},
-		})
+		}, http.StatusOK)
 		return
 	}
 
@@ -41,7 +41,7 @@ func MovePostHandler(w http.ResponseWriter, r *http.Request) {
 			Status:  response.Error,
 			Message: "Failed to save state",
 			Data:    map[string]any{},
-		})
+		}, http.StatusInternalServerError)
 		return
 	}
 
@@ -56,5 +56,5 @@ func MovePostHandler(w http.ResponseWriter, r *http.Request) {
 		Status:  response.Ok,
 		Message: "Moved",
 		Data:    d,
-	})
+	}, http.StatusCreated)
 }

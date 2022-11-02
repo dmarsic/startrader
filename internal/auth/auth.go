@@ -29,7 +29,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	response.WriteResponse(w, response.Response{
 		Status:  response.Ok,
 		Message: "Logged in",
-	})
+	}, http.StatusOK)
 }
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +40,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		response.WriteResponse(w, response.Response{
 			Status:  response.Warning,
 			Message: "No user logged in",
-		})
+		}, http.StatusOK)
 	} else {
 		delete(session.Values, "userID")
 		session.Save(r, w)
@@ -50,7 +50,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 			Data: map[string]any{
 				"userID": userID,
 			},
-		})
+		}, http.StatusOK)
 	}
 }
 

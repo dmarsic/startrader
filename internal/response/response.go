@@ -19,6 +19,7 @@ type Response struct {
 	Data    any        `json:"data"`
 }
 
-func WriteResponse(w http.ResponseWriter, e Response) {
+func WriteResponse(w http.ResponseWriter, e Response, statusCode int) {
+	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(e)
 }

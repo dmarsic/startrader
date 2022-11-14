@@ -33,6 +33,17 @@ func MovePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Deregister trader from the source system
+	if err := starsystem.DeregisterTrader(u.Name, u.Location); err != nil {
+		response.WriteResponse(w, response.Response{
+			Status:  response.Error,
+			Message: "Failed to deregister user from the starbase",
+			Data:    map[string]any{},
+		}, http.StatusInternalServerError)
+		return
+	}
+
+	// Update user data
 	u.Location = destination.Name
 	u.Inventory["fuel"] = fuel
 	err := WriteUserState(&u)
@@ -45,6 +56,16 @@ func MovePostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Register trader in the destination system
+	if err := starsystem.RegisterTrader(u.Name, u.Location); err != nil {
+		response.WriteResponse(w, response.Response{
+			Status:  response.Error,
+			Message: "Failed to register user in the starbase",
+			Data:    map[string]any{},
+		}, http.StatusInternalServerError)
+	}
+
+	// Return successful status to the caller
 	d := map[string]interface{}{
 		"user":           u.Name,
 		"start":          u.Location,

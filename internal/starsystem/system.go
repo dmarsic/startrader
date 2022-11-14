@@ -16,6 +16,7 @@ type System struct {
 	Name     string   `json:"name"`
 	Position Position `json:"position"`
 	Market   Market   `json:"market"`
+	Traders  []string `json:"traders"`
 }
 
 type Position struct {
@@ -94,5 +95,45 @@ func (m *Market) Reduce(item string, quantity float64) error {
 	i.Quantity -= quantity
 	(*m)[item] = i
 
+	return nil
+}
+
+func RegisterTrader(traderName, systemName string) error {
+	s, err := ReadSystem(systemName)
+	if err != nil {
+		return err
+	}
+
+	s.Traders = append(s.Traders, traderName)
+	if err := WriteSystemState(s); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeregisterTrader(traderName, systemName string) error {
+	s, err := ReadSystem(systemName)
+	if err != nil {
+		return err
+	}
+
+	var pos int
+	for i, t := range s.Traders {
+		if t == traderName {
+			pos = i
+			break
+		}
+	}
+	if len(s.Traders) > 0 {
+		if pos == len(s.Traders)-1 {
+			s.Traders = s.Traders[:pos]
+		} else {
+			s.Traders = append(s.Traders[:pos], s.Traders[pos+1:]...)
+		}
+	}
+	if err := WriteSystemState(s); err != nil {
+		return err
+	}
 	return nil
 }

@@ -72,6 +72,17 @@ func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
 		}, http.StatusInternalServerError)
 		return
 	}
+
+	// Register as trader in a starbase.
+	if err := starsystem.RegisterTrader(name, u.Location); err != nil {
+		response.WriteResponse(w, response.Response{
+			Status:  response.Error,
+			Message: "Failed to save state",
+			Data:    map[string]any{},
+		}, http.StatusInternalServerError)
+	}
+
+	// Success response.
 	response.WriteResponse(w, response.Response{
 		Status:  response.Ok,
 		Message: "Created",
@@ -145,6 +156,7 @@ func WriteUserState(u *User) error {
 	return nil
 }
 
+// Add adds an item to inventory.
 func (i *Inventory) Add(item string, quantity float64) {
 	existing, ok := (*i)[item]
 	if !ok {

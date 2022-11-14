@@ -15,12 +15,13 @@
 			"price": 2
 		},
 		"grains": {
-			"quantity": 600,
+			"quantity": 540,
 			"price": 10
 		},
 		"water": {
 			"quantity": 10000,
 			"price": 5
 		}
-	}
+	},
+	"traders": []
 }

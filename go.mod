@@ -9,5 +9,3 @@ require (
 )
 
 require github.com/gorilla/securecookie v1.1.1 // indirect
-
-replace github.com/abhinav-TB/dantdb => /home/kofi/Documents/p/opensource/dantdb

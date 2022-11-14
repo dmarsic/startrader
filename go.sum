@@ -1,3 +1,5 @@
+github.com/abhinav-TB/dantdb v0.0.0-20220522153004-c2602a1cc142 h1:3bfqSzEWGSPuP24ttsJg0eWAbV3pSrmcATZ69dOsXTA=
+github.com/abhinav-TB/dantdb v0.0.0-20220522153004-c2602a1cc142/go.mod h1:J0Jzr9dcq/7ikF5Hff+w9e14oC0L+QB49NufpcOD3F0=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/gorilla/securecookie v1.1.1 h1:miw7JPhV+b/lAHSXz4qd/nN9jRiAFV5FwjeKyCS8BvQ=

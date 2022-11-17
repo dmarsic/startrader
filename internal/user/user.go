@@ -48,7 +48,7 @@ func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("user.NewUserPostHandler: name=" + name)
 
 	// If user exists, return error.
-	_, err := ReadUser(name)
+	_, err := ReadUsers([]string{name})
 	if err == nil {
 		// User exists.
 		response.WriteResponse(w, response.Response{
@@ -128,19 +128,27 @@ func ReadAllUsers() (Users, error) {
 	return users, nil
 }
 
-func ReadUser(userID string) (User, error) {
+func ReadUsers(names []string) (Users, error) {
 	db, err := dantdb.New(StoreDir)
 	if err != nil {
-		return User{}, err
+		return nil, err
 	}
 
-	user := User{}
-	err = db.Read("users", userID, &user)
+	records, err := db.ReadFiltered("users", names)
 	if err != nil {
-		return User{}, err
+		return nil, err
 	}
 
-	return user, nil
+	users := Users{}
+	for _, r := range records {
+		user := User{}
+		if err := json.Unmarshal([]byte(r), &user); err != nil {
+			return nil, err
+		}
+		users[user.Name] = user
+	}
+
+	return users, nil
 }
 
 func WriteUserState(u *User) error {

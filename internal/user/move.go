@@ -9,8 +9,26 @@ import (
 
 func MovePostHandler(w http.ResponseWriter, r *http.Request) {
 	userID := auth.SessionData(r, "userID")
-	u, _ := ReadUser(userID.(string))
-	destination, _ := starsystem.ReadSystem(r.FormValue("system"))
+
+	users, err := ReadUsers([]string{userID.(string)})
+	u := users[userID.(string)]
+
+	if err != nil {
+		response.WriteResponse(w, response.Response{
+			Status:  response.Error,
+			Message: "Can't find user",
+			Data:    u,
+		}, http.StatusInternalServerError)
+	}
+
+	destination, err := starsystem.ReadSystem(r.FormValue("system"))
+	if err != nil {
+		response.WriteResponse(w, response.Response{
+			Status:  response.Error,
+			Message: "Unknown destination",
+			Data:    destination,
+		}, http.StatusBadRequest)
+	}
 
 	fuelRequired, _ := u.FuelRequired(destination)
 
@@ -46,8 +64,7 @@ func MovePostHandler(w http.ResponseWriter, r *http.Request) {
 	// Update user data
 	u.Location = destination.Name
 	u.Inventory["fuel"] = fuel
-	err := WriteUserState(&u)
-	if err != nil {
+	if err := WriteUserState(&u); err != nil {
 		response.WriteResponse(w, response.Response{
 			Status:  response.Error,
 			Message: "Failed to save state",

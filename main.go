@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"startrader/internal/auth"
 	"startrader/internal/response"
@@ -70,8 +71,26 @@ func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 func UserGetHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("UserGetHandler")
+
 	vars := mux.Vars(r)
-	u, _ := user.ReadUser(vars["name"])
+	userList := strings.Split(vars["name"], ",")
+	if len(userList) == 0 || userList[0] == "" {
+		response.WriteResponse(w, response.Response{
+			Status:  response.Error,
+			Message: "User(s) not specified",
+			Data:    nil,
+		}, http.StatusBadRequest)
+		return
+	}
+
+	u, err := user.ReadUsers(userList)
+	if err != nil {
+		response.WriteResponse(w, response.Response{
+			Status:  response.Error,
+			Message: err.Error(),
+			Data:    userList,
+		}, http.StatusInternalServerError)
+	}
 	response.WriteResponse(w, response.Response{
 		Status: response.Ok,
 		Data:   u,

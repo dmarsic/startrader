@@ -13,7 +13,17 @@ import (
 func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("BuyHandler")
 	userID := auth.SessionData(r, "userID")
-	u, _ := ReadUser(userID.(string))
+
+	users, err := ReadUsers([]string{userID.(string)})
+	if err != nil || len(users) == 0 {
+		response.WriteResponse(w, response.Response{
+			Status:  response.Error,
+			Message: "Can't read user data",
+			Data:    userID.(string),
+		}, http.StatusInternalServerError)
+	}
+	u := users[userID.(string)]
+
 	s, err := starsystem.ReadSystem(u.Location)
 	if err != nil {
 		response.WriteResponse(w, response.Response{

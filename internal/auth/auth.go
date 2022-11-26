@@ -56,7 +56,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/login" || r.URL.Path == "/logout" || r.URL.Path == "/u/new" {
+		if r.URL.Path == "/api/v1/login" || r.URL.Path == "/api/v1/logout" || r.URL.Path == "/api/v1/u/new" {
 			log.Println("authMiddleware: matched path: " + r.URL.Path + ", skipping login redirect.")
 			next.ServeHTTP(w, r)
 			return
@@ -65,7 +65,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		userID := SessionData(r, "userID")
 		if userID == nil {
 			log.Println("authMiddleware: userID is not set, going to /login")
-			http.Redirect(w, r, "/login", http.StatusFound)
+			http.Redirect(w, r, "/api/v1/login", http.StatusFound)
 			return
 		}
 		log.Printf("authMiddleware: user=%s, passing\n", userID)

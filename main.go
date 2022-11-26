@@ -16,18 +16,20 @@ import (
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/", HomeHandler)
-	r.HandleFunc("/login", auth.LoginHandler)
-	r.HandleFunc("/logout", auth.LogoutHandler)
-	r.HandleFunc("/systems", AllSystemsHandler)
-	r.HandleFunc("/systems/{name}", SystemGetHandler)
-	r.HandleFunc("/u", AllUsersHandler)
-	r.HandleFunc("/u/new", user.NewUserPostHandler).Methods(http.MethodPost)
-	r.HandleFunc("/u/{name}", UserGetHandler)
-	r.HandleFunc("/m", user.MovePostHandler).Methods(http.MethodPost)
-	r.HandleFunc("/b", user.BuyPostHandler).Methods(http.MethodPost)
 
-	r.Use(auth.AuthMiddleware)
+	a := r.PathPrefix("/api/v1").Subrouter()
+	a.HandleFunc("/", HomeHandler)
+	a.HandleFunc("/login", auth.LoginHandler)
+	a.HandleFunc("/logout", auth.LogoutHandler)
+	a.HandleFunc("/systems", AllSystemsHandler)
+	a.HandleFunc("/systems/{name}", SystemGetHandler)
+	a.HandleFunc("/u", AllUsersHandler)
+	a.HandleFunc("/u/new", user.NewUserPostHandler).Methods(http.MethodPost)
+	a.HandleFunc("/u/{name}", UserGetHandler)
+	a.HandleFunc("/m", user.MovePostHandler).Methods(http.MethodPost)
+	a.HandleFunc("/b", user.BuyPostHandler).Methods(http.MethodPost)
+
+	a.Use(auth.AuthMiddleware)
 
 	port := ":5000"
 	fmt.Println("Server is running on port" + port)

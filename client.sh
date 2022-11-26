@@ -4,7 +4,7 @@ GREEN="\e[32m"
 RESET="\e[0m"
 
 CURL="curl -L -b cookie.txt"
-HOST="http://localhost:5000"
+HOST="http://localhost:5000/api/v1"
 
 green() {
     echo -e "${GREEN}$1${RESET}"
@@ -15,6 +15,9 @@ curl -i -c cookie.txt $HOST/login?user=user1
 
 green "Show information about self"
 $CURL $HOST/
+
+green "Show information about multiple users"
+$CURL $HOST/u/Kofi,user1
 
 green "Show information about the source system"
 $CURL $HOST/systems/sol

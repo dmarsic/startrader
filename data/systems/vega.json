@@ -15,9 +15,11 @@
 			"price": 3
 		},
 		"grains": {
-			"quantity": 3960,
+			"quantity": 3920,
 			"price": 20
 		}
 	},
-	"traders": []
+	"traders": [
+		"user1"
+	]
 }

@@ -23,5 +23,7 @@
 			"price": 5
 		}
 	},
-	"traders": []
+	"traders": [
+		"Kofi"
+	]
 }

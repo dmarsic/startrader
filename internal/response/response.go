@@ -1,8 +1,7 @@
 package response
 
 import (
-	"encoding/json"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
 type StatusType string
@@ -19,7 +18,8 @@ type Response struct {
 	Data    any        `json:"data"`
 }
 
-func WriteResponse(w http.ResponseWriter, e Response, statusCode int) {
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(e)
+func WriteResponse(c *gin.Context, e Response, statusCode int) {
+	c.Status(statusCode)
+	c.Header("Content-Type", "application/json")
+	c.JSON(statusCode, e)
 }

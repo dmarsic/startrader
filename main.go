@@ -11,73 +11,96 @@ import (
 	"startrader/internal/starsystem"
 	"startrader/internal/user"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	r := mux.NewRouter()
+	r := gin.Default()
 
-	a := r.PathPrefix("/api/v1").Subrouter()
-	a.HandleFunc("/", HomeHandler)
-	a.HandleFunc("/login", auth.LoginHandler)
-	a.HandleFunc("/logout", auth.LogoutHandler)
-	a.HandleFunc("/systems", AllSystemsHandler)
-	a.HandleFunc("/systems/{name}", SystemGetHandler)
-	a.HandleFunc("/u", AllUsersHandler)
-	a.HandleFunc("/u/new", user.NewUserPostHandler).Methods(http.MethodPost)
-	a.HandleFunc("/u/{name}", UserGetHandler)
-	a.HandleFunc("/m", user.MovePostHandler).Methods(http.MethodPost)
-	a.HandleFunc("/b", user.BuyPostHandler).Methods(http.MethodPost)
+	store := cookie.NewStore([]byte("hushhush"))
+	r.Use(sessions.Sessions("session", store))
 
-	a.Use(auth.AuthMiddleware)
+	a := r.Group("/api/v1")
+	{
+		a.GET("/", HomeHandler)
+		a.GET("/login", auth.LoginHandler)
+		a.GET("/logout", auth.LogoutHandler)
+		a.GET("/systems", AllSystemsHandler)
+		a.GET("/systems/:name", SystemGetHandler)
+		a.GET("/u", AllUsersHandler)
+		a.POST("/u/new", user.NewUserPostHandler)
+		a.GET("/u/:name", UserGetHandler)
+		a.POST("/m", user.MovePostHandler)
+		a.POST("/b", user.BuyPostHandler)
+	}
 
-	port := ":5000"
+	a.Use(auth.AuthMiddleware())
+
+	port := ":9500"
 	fmt.Println("Server is running on port" + port)
 
-	if err := http.ListenAndServe(port, r); err != nil {
-		log.Fatal(err)
-	}
+	r.Run(port)
 }
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
+func HomeHandler(c *gin.Context) {
 	log.Println("HomeHandler")
-	userID := auth.SessionData(r, "userID")
-	http.Redirect(w, r, fmt.Sprintf("/u/%s", userID), http.StatusFound)
+	session := sessions.Default(c)
+	userID := session.Get("id")
+	group := c.FullPath()[:len(c.FullPath())-1]
+	c.Redirect(http.StatusFound, fmt.Sprintf("%s/u/%s", group, userID))
 }
 
-func AllSystemsHandler(w http.ResponseWriter, r *http.Request) {
+func AllSystemsHandler(c *gin.Context) {
 	systems, _ := starsystem.ReadAllSystems()
-	response.WriteResponse(w, response.Response{
+	response.WriteResponse(c, response.Response{
 		Status: response.Ok,
 		Data:   systems,
 	}, http.StatusOK)
 }
 
-func SystemGetHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	s, _ := starsystem.ReadSystem(vars["name"])
-	response.WriteResponse(w, response.Response{
+func SystemGetHandler(c *gin.Context) {
+	name := c.Param("name")
+	s, _ := starsystem.ReadSystem(name)
+	response.WriteResponse(c, response.Response{
 		Status: response.Ok,
 		Data:   s,
 	}, http.StatusOK)
 }
 
-func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
+func AllUsersHandler(c *gin.Context) {
 	log.Println("AllUsersHandler")
 	users, _ := user.ReadAllUsers()
-	response.WriteResponse(w, response.Response{
+	response.WriteResponse(c, response.Response{
 		Status: response.Ok,
 		Data:   users,
 	}, http.StatusOK)
 }
 
-func UserGetHandler(w http.ResponseWriter, r *http.Request) {
+type UserInput struct {
+	Name string `uri:"name"`
+}
+
+func UserGetHandler(c *gin.Context) {
 	log.Println("UserGetHandler")
 
-	vars := mux.Vars(r)
-	userList := strings.Split(vars["name"], ",")
+	var userInput UserInput
+
+	if err := c.ShouldBindUri(&userInput); err != nil {
+		response.WriteResponse(c, response.Response{
+			Status:  response.Error,
+			Message: err.Error(),
+			Data:    map[string]any{},
+		}, http.StatusBadRequest)
+		return
+	}
+
+	name := userInput.Name
+
+	userList := strings.Split(name, ",")
 	if len(userList) == 0 || userList[0] == "" {
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: "User(s) not specified",
 			Data:    nil,
@@ -87,13 +110,13 @@ func UserGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	u, err := user.ReadUsers(userList)
 	if err != nil {
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: err.Error(),
 			Data:    userList,
 		}, http.StatusInternalServerError)
 	}
-	response.WriteResponse(w, response.Response{
+	response.WriteResponse(c, response.Response{
 		Status: response.Ok,
 		Data:   u,
 	}, http.StatusOK)

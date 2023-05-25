@@ -4,10 +4,10 @@ GREEN="\e[32m"
 RESET="\e[0m"
 
 CURL="curl -L -b cookie.txt"
-HOST="http://localhost:5000/api/v1"
+HOST="http://localhost:9500/api/v1"
 
 green() {
-    echo -e "${GREEN}$1${RESET}"
+    echo -e "\n\n${GREEN}$1${RESET}\n"
 }
 
 green "Login as user1"

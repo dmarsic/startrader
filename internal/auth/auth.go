@@ -1,83 +1,74 @@
-// Package auth manages user login and logout.
-// It stores userID into a cookie to use it as session data.
-//
-// There is no real authentication. The user can just state
-// who they are at this time, and it will be stored in the
-// cookie.
+// // Package auth manages user login and logout.
+// // It stores userID into a cookie to use it as session data.
+// //
+// // There is no real authentication. The user can just state
+// // who they are at this time, and it will be stored in the
+// // cookie.
 
 package auth
 
 import (
 	"log"
 	"net/http"
-	"os"
-	"startrader/internal/response"
 
-	"github.com/gorilla/sessions"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
+
+	"startrader/internal/response"
 )
 
-var cookiejar = sessions.NewCookieStore([]byte(os.Getenv("STARTRADER_SESSION_KEY")))
-
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.URL.Query().Get("user")
+func LoginHandler(c *gin.Context) {
+	userID := c.Query("user")
 	log.Printf("LoginHandler: user=%s\n", userID)
 
-	session, _ := cookiejar.Get(r, "session")
-	session.Values["userID"] = userID
-	session.Save(r, w)
-
-	response.WriteResponse(w, response.Response{
+	session := sessions.Default(c)
+	session.Set("id", userID)
+	session.Save()
+	response.WriteResponse(c, response.Response{
 		Status:  response.Ok,
 		Message: "Logged in",
+		Data: map[string]any{
+			"user": userID,
+		},
 	}, http.StatusOK)
 }
 
-func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := cookiejar.Get(r, "session")
-	userID, ok := session.Values["userID"]
-	log.Printf("LogoutHandler: user=%s\n", userID)
-	if !ok {
-		response.WriteResponse(w, response.Response{
-			Status:  response.Warning,
-			Message: "No user logged in",
-		}, http.StatusOK)
-	} else {
-		delete(session.Values, "userID")
-		session.Save(r, w)
-		response.WriteResponse(w, response.Response{
-			Status:  response.Ok,
-			Message: "Logged out",
-			Data: map[string]any{
-				"userID": userID,
-			},
-		}, http.StatusOK)
-	}
+func LogoutHandler(c *gin.Context) {
+	session := sessions.Default(c)
+	sessionID := session.Get("id")
+	session.Clear()
+	session.Save()
+
+	log.Printf("LogoutHandler: user=%s\n", sessionID)
+	response.WriteResponse(c, response.Response{
+		Status:  response.Ok,
+		Message: "Logged out",
+		Data: map[string]any{
+			"userID": sessionID,
+		},
+	}, http.StatusOK)
 }
 
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/api/v1/login" || r.URL.Path == "/api/v1/logout" || r.URL.Path == "/api/v1/u/new" {
-			log.Println("authMiddleware: matched path: " + r.URL.Path + ", skipping login redirect.")
-			next.ServeHTTP(w, r)
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		urlPath := c.Request.URL.Path
+		if urlPath == "/api/v1/login" || urlPath == "/api/v1/logout" || urlPath == "/api/v1/u/new" {
+			log.Println("authMiddleware: matched path: " + urlPath + ", skipping login redirect.")
+			c.Next()
 			return
 		}
 
-		userID := SessionData(r, "userID")
-		if userID == nil {
-			log.Println("authMiddleware: userID is not set, going to /login")
-			http.Redirect(w, r, "/api/v1/login", http.StatusFound)
+		session := sessions.Default(c)
+		sessionID := session.Get("id")
+		if sessionID == nil {
+			response.WriteResponse(c, response.Response{
+				Status:  response.Error,
+				Message: "Not logged in",
+				Data:    map[string]any{},
+			}, http.StatusUnauthorized)
+			c.Redirect(http.StatusFound, "/api/v1/login")
 			return
 		}
-		log.Printf("authMiddleware: user=%s, passing\n", userID)
-		next.ServeHTTP(w, r)
-	})
-}
-
-func SessionData(r *http.Request, key string) interface{} {
-	session, _ := cookiejar.Get(r, "session")
-	value, ok := session.Values[key]
-	if !ok {
-		return nil
+		log.Printf("authMiddleware: session id=%s, passing\n", sessionID)
 	}
-	return value
 }

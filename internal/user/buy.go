@@ -4,76 +4,82 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"startrader/internal/auth"
 	"startrader/internal/response"
 	"startrader/internal/starsystem"
-	"strconv"
+
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 )
 
-func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
+type BuyInput struct {
+	Item     string  `form:"item"`
+	Quantity float64 `form:"quantity"`
+}
+
+func BuyPostHandler(c *gin.Context) {
 	log.Println("BuyHandler")
-	userID := auth.SessionData(r, "userID")
+
+	session := sessions.Default(c)
+	userID := session.Get("id")
 
 	users, err := ReadUsers([]string{userID.(string)})
 	if err != nil || len(users) == 0 {
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: "Can't read user data",
-			Data:    userID.(string),
+			Data: map[string]any{
+				"user": userID,
+			},
 		}, http.StatusInternalServerError)
 	}
 	u := users[userID.(string)]
 
 	s, err := starsystem.ReadSystem(u.Location)
 	if err != nil {
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: err.Error(),
 		}, http.StatusInternalServerError)
 		return
 	}
 
-	item := r.FormValue("item")
-	quantity, err := strconv.ParseFloat(r.FormValue("quantity"), 64)
-	if err != nil {
-		response.WriteResponse(w, response.Response{
+	var buyInput BuyInput
+	if c.ShouldBind(&buyInput) != nil {
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
-			Message: err.Error(),
-			Data: map[string]any{
-				"input_value": r.FormValue("quantity"),
-			},
+			Message: "Cannot bind form data",
 		}, http.StatusBadRequest)
 		return
 	}
 
-	marketItem, ok := s.Market[item]
+	marketItem, ok := s.Market[buyInput.Item]
 	if !ok {
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: "Item not found",
 			Data: map[string]any{
-				"item": item,
+				"item": buyInput.Item,
 			},
 		}, http.StatusOK)
 		return
 	}
 
-	if marketItem.Quantity < quantity {
-		response.WriteResponse(w, response.Response{
+	if marketItem.Quantity < buyInput.Quantity {
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: "Not enough available items",
 			Data: map[string]any{
-				"item":               item,
-				"requested_quantity": fmt.Sprintf("%.1f", quantity),
+				"item":               buyInput.Item,
+				"requested_quantity": fmt.Sprintf("%.1f", buyInput.Quantity),
 				"available_quantity": fmt.Sprintf("%.1f", marketItem.Quantity),
 			},
 		}, http.StatusOK)
 		return
 	}
 
-	requiredCredits := marketItem.Price * quantity
+	requiredCredits := marketItem.Price * buyInput.Quantity
 	if u.Credits < requiredCredits {
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: "Not enough credits",
 			Data: map[string]any{
@@ -85,11 +91,11 @@ func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.Credits -= requiredCredits
-	u.Inventory.Add(item, quantity)
-	s.Market.Reduce(item, quantity)
+	u.Inventory.Add(buyInput.Item, buyInput.Quantity)
+	s.Market.Reduce(buyInput.Item, buyInput.Quantity)
 
 	if err := starsystem.WriteSystemState(s); err != nil {
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: err.Error(),
 		}, http.StatusInternalServerError)
@@ -97,19 +103,19 @@ func BuyPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := WriteUserState(&u); err != nil {
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: err.Error(),
 		}, http.StatusInternalServerError)
 		return
 	}
 
-	response.WriteResponse(w, response.Response{
+	response.WriteResponse(c, response.Response{
 		Status:  response.Ok,
 		Message: "Bought",
 		Data: map[string]any{
-			"item":     item,
-			"quantity": fmt.Sprintf("%.1f", quantity),
+			"item":     buyInput.Item,
+			"quantity": fmt.Sprintf("%.1f", buyInput.Quantity),
 		},
 	}, http.StatusCreated)
 }

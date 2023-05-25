@@ -9,6 +9,7 @@ import (
 	"startrader/internal/starsystem"
 
 	"github.com/abhinav-TB/dantdb"
+	"github.com/gin-gonic/gin"
 )
 
 const StoreDir = "./data/"
@@ -34,6 +35,10 @@ type Item struct {
 	Quantity float64 `json:"quantity"`
 }
 
+type UserInput struct {
+	Name string `json:"name"`
+}
+
 func NewUser(name string) *User {
 	return &User{
 		Name:      name,
@@ -43,15 +48,28 @@ func NewUser(name string) *User {
 	}
 }
 
-func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("name")
+func NewUserPostHandler(c *gin.Context) {
+	// Struct to bind the request body
+	var userInput UserInput
+
+	// Bind the request body
+	if err := c.ShouldBindJSON(&userInput); err != nil {
+		response.WriteResponse(c, response.Response{
+			Status:  response.Error,
+			Message: err.Error(),
+			Data:    map[string]any{},
+		}, http.StatusBadRequest)
+		return
+	}
+
+	name := userInput.Name
 	log.Println("user.NewUserPostHandler: name=" + name)
 
 	// If user exists, return error.
 	_, err := ReadUsers([]string{name})
 	if err == nil {
 		// User exists.
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: "User exists",
 			Data: map[string]any{
@@ -65,7 +83,7 @@ func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
 	u := NewUser(name)
 	err = WriteUserState(u)
 	if err != nil {
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: "Failed to save state",
 			Data:    map[string]any{},
@@ -75,7 +93,7 @@ func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Register as trader in a starbase.
 	if err := starsystem.RegisterTrader(name, u.Location); err != nil {
-		response.WriteResponse(w, response.Response{
+		response.WriteResponse(c, response.Response{
 			Status:  response.Error,
 			Message: "Failed to save state",
 			Data:    map[string]any{},
@@ -83,7 +101,7 @@ func NewUserPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Success response.
-	response.WriteResponse(w, response.Response{
+	response.WriteResponse(c, response.Response{
 		Status:  response.Ok,
 		Message: "Created",
 		Data: map[string]any{

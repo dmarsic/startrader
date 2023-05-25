@@ -10,14 +10,35 @@ green() {
     echo -e "\n\n${GREEN}$1${RESET}\n"
 }
 
-green "Login as user1"
-curl -i -c cookie.txt $HOST/login?user=user1
+create_user() {
+    local userfile="data/users/testuser.json"
+    cat <<EOF > "$userfile"
+{
+	"name": "testuser",
+	"credits": 1000,
+	"location": "sol",
+	"inventory": {
+		"fuel": {
+			"quantity": 250.0
+		},
+		"grains": {
+			"quantity": 10
+		}
+	}
+}
+EOF
+}
+
+create_user
+
+green "Login as testuser"
+curl -i -c cookie.txt $HOST/login?user=testuser
 
 green "Show information about self"
 $CURL $HOST/
 
 green "Show information about multiple users"
-$CURL $HOST/u/Kofi,user1
+$CURL $HOST/u/Kofi,user1,testuser
 
 green "Show information about the source system"
 $CURL $HOST/systems/sol
